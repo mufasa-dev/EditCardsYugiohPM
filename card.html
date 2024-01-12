@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="app">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leitor de Arquivos Yu-Gi-Oh PM</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" integrity="sha512-nMNlpuaDPrqlEls3IX/Q56H36qvBASwb3ipuo3MxeWbsQB1881ox0cRv7UPTgBlriqoynt35KjEwgGUeUXIPnw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <style>
+        .containerCard{
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .card-design{
+            height: 300px;
+            z-index: 101;
+        }
+        .card-artwork{
+            height: 155px;
+            position: absolute;
+            z-index: 102;
+        }
+        .card-color{
+            height: 290px;
+            position: absolute;
+        }
+        .plusType{
+            color: blue;
+            cursor: pointer !important;
+        }
+        .loading{
+            background-color: white;
+            position: fixed;
+            width: 100%;
+            height: 100vh;
+            transition: 300ms;
+            top:0;
+            left: 0;
+            z-index: 99999;
+        }
+    </style>
+</head>
+<body ng-controller="MainController">
+    <div id="load" class="loading"></div>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand m-0 p-0" href="#">
+            <img ng-src="{{ './icon.png' }}" style="width: 40px;" alt="Logo">
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavDropdown">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" hidden ng-click="showNavLiks()" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Editar
+              </a>
+              <div class="dropdown-menu show" ng-show="navLink">
+                <a class="dropdown-item active" href="#">Cartas</a>
+                <a class="dropdown-item" href="./fusion.html">Fusões</a>
+                <a class="dropdown-item" href="#">Personagens</a>
+              </div>
+            </li>
+            
+          </ul>
+        <div class="nav-link" ng-click="openModal()" >Salvar</div>
+        </div>
+      </nav>
+
+<div class="mr-3 ml-3">
+    <div class="row m-0">
+        <div class="col-md-5">
+            <div class="row m-0">
+                <div class="col" style="width: 200px;">
+                    <div class="containerCard">
+                        <img class="card-color" ng-src="{{ './_resources/card_design/texture_yellow.png' }}" alt="Artwork" ng-if="selected.attribute != 'spell' && selected.attribute != 'trap'">
+                        <img class="card-color" ng-src="{{ './_resources/card_design/texture_green.png' }}" alt="Artwork" ng-if="selected.attribute == 'spell' ">
+                        <img class="card-color" ng-src="{{ './_resources/card_design/texture_pink.png' }}" alt="Artwork" ng-if="selected.attribute == 'trap' ">
+                        <img class="card-design" ng-src="{{ './_resources/card_design/frame_monster.png' }}" alt="Artwork" ng-if="selected.attribute != 'spell' && selected.attribute != 'trap'">
+                        <img class="card-design" ng-src="{{ './_resources/card_design/frame_spelltrap.png' }}" alt="Artwork" ng-if="selected.attribute == 'spell' || selected.attribute == 'trap'">
+                        <img class="card-artwork" ng-src="{{ './_resources/_card_artwork/' + selected.id + '.png' }}" alt="Artwork">
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group mb-0">
+                        <small >Código da Carta</small>
+                        <input type="text" class="form-control form-control-sm"  ng-model="selected.id" placeholder="Código">
+                    </div>
+                    <div class="form-group mb-0">
+                        <small>Nome</small>
+                        <input type="text" class="form-control form-control-sm"  ng-model="selected.card_name" placeholder="Nome">
+                    </div>
+                    <div class="form-row">
+                        <div class="col">
+                            <small>Atributo <b class="plusType" ng-click="newAttribute()">+</b></small>
+                            <select ng-model="selected.attribute" ng-options="type for type in attributes" class="form-control form-control-sm select-atribute"></select>
+                        </div>
+                        <div class="col">
+                            <small>Tipo <b class="plusType" ng-click="newType()">+</b></small>
+                            <select ng-model="selected.type" ng-options="type for type in types" class="form-control form-control-sm select-type"></select>
+                        </div>
+                    </div>
+
+                    <div class="form-row" ng-if="selected.attribute != 'spell' && selected.attribute != 'trap'">
+                        <div class="col">
+                            <small>Level</small>
+                            <input type="number" class="form-control form-control-sm"  ng-model="selected.level" placeholder="Level">
+                        </div>
+                        <div class="col">
+                            <small>Atk</small>
+                            <input type="number" class="form-control form-control-sm"  ng-model="selected.atk" placeholder="Atk">
+                        </div>
+                        <div class="col">
+                            <small>Def</small>
+                            <input type="number" class="form-control form-control-sm"  ng-model="selected.def" placeholder="Def">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col">
+                            <small>Conta como...</small>
+                            <select ng-model="selected.count_as" ng-options="type for type in types" class="form-control form-control-sm select-type"></select>
+                        </div>
+                        <div class="col">
+                            <small >Passcode</small>
+                            <input type="text" class="form-control form-control-sm"  ng-model="selected.passcode" placeholder="Passcode">
+                        </div>
+                    </div>
+                    <div class="form-check mt-1">
+                        <input type="checkbox" class="form-check-input" id="checkInitial" ng-model="selected.initial">
+                        <label class="form-check-label" for="checkInitial">Deck inicial</label>
+                      </div>
+                </div>
+            </div>
+            
+            <table class="table table-striped table-hover table-bordered mt-3">
+                <thead>
+                    <tr>
+                        <th class="p-1">Efeitos</th>
+                        <th class="p-1" style="width: 50px;">
+                            <button class="btn btn-primary btn-sm" ng-click="newEffect()" style="width: 64px">Novo</button>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="ev in selected.effect track by $index">
+                        <td class="p-1">
+                            <input type="text" class="form-control form-control-sm"  ng-model="selected.effect[$index]" placeholder="Evento">
+                        </td>
+                        <td class="p-1">
+                            <button class="btn btn-danger btn-sm" ng-click="removeEffect($index)">Apagar</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-7">
+            <table class="table table-striped table-hover table-bordered mt-3">
+                <thead>
+                    <tr>
+                        <th class="p-1">Nome</th>
+                        <th class="p-1">Atributo</th>
+                        <th class="p-1" style="width: 70px;">Level</th>
+                        <th class="p-1">ATK</th>
+                        <th class="p-1">DEF</th>
+                        <th class="p-1" style="width: 140px;">Tipo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="p-1"><input type="text" ng-model="nameFilter" class="form-control form-control-sm" placeholder="Nome" ng-change="filter()"></td>
+                        <td class="p-1"><input type="text" ng-model="attributeFilter" class="form-control form-control-sm" placeholder="Atributo" ng-change="filter()"></td>
+                        <td class="p-1"><input type="number" ng-model="levelFilter" class="form-control form-control-sm" placeholder="Nv" ng-change="filter()"></td>
+                        <td class="p-1"><input type="number" ng-model="atkFilter" class="form-control form-control-sm" placeholder="Atk" ng-change="filter()"></td>
+                        <td class="p-1"><input type="number" ng-model="defFilter" class="form-control form-control-sm" placeholder="Def" ng-change="filter()"></td>
+                        <td class="p-1"><input type="text" ng-model="typeFilter" class="form-control form-control-sm" placeholder="Tipo" ng-change="filter()"></td>
+                    </tr>
+                    <tr ng-repeat="card in pagedCardArray" ng-click="selectItem(card)">
+                        <td class="p-1" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 400px;">
+                            {{ card.card_name }}
+                        </td>
+                        <td class="p-1">
+                            <img ng-src="{{ './_resources/_attributes/' + card.attribute + '.png' }}" style="width: 20px;" alt="Tipo"> {{ card.attribute }}
+                        </td>
+                        <td class="p-1"> 
+                            <img ng-src="{{ './_resources/card_design/star_level.png' }}" style="width: 20px;" alt="Tipo" ng-if="card.level"> {{ card.level }}
+                        </td>
+                        <td class="p-1">{{ card.atk }}</td>
+                        <td class="p-1">{{ card.def }}</td>
+                        <td class="p-1">
+                            <img ng-src="{{ './_resources/_types/' + card.type + '.png' }}" style="width: 20px;" alt="Tipo"> {{ card.type }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="pagination mb-2 d-flex align-items-center justify-content-end">
+                <button class="btn btn-success btn-sm mr-auto" ng-click="newCard()">Nova carta</button>
+
+                <button class="btn btn-primary btn-sm"  ng-disabled="currentPage === 1" ng-click="prevPage()">Anterior</button>
+                <span class="mr-2 ml-2"> Página {{ currentPage }} de {{ numberOfPages() }} </span>
+                <button class="btn btn-primary btn-sm" ng-disabled="currentPage === numberOfPages()" ng-click="nextPage()">Próxima</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal " id="exampleModal" ng-show="openModalDownload" aria-hidden="false" style="display: block; background: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Salvar lista de cartas</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" ng-click="closeModal()">
+                <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Ao clicar em <b>download</b> sera gerado um arquivo <b>card_list.gd</b>. Coloque no arquivo na pasta <b>"_scripts"</b> dentro do projeto, substituindo o arquivo atual.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" ng-click="closeModal()" >Fechar</button>
+                <button type="button" class="btn btn-primary" ng-click="downloadGDScript()">Download</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="text-right m-3"><small><i>Desenvolvido por Musafa</i></small></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular.min.js" integrity="sha512-KZmyTq3PLx9EZl0RHShHQuXtrvdJ+m35tuOiwlcZfs/rE7NZv29ygNA8SFCkMXTnYZQK2OX0Gm2qKGfvWEtRXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/angular-utils-pagination@0.11.1/dirPagination.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.min.js" integrity="sha512-WW8/jxkELe2CAiE4LvQfwm1rajOS8PHasCCx+knHG0gBHt8EXxS6T6tJRTGuDQVnluuAvMxWF4j8SNFDKceLFg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+    var app = angular.module('app', ['angularUtils.directives.dirPagination']);
+
+    app.controller('MainController', function ($scope) {
+        $scope.cardArray = [];
+        $scope.cardPool = [];
+        $scope.filteredCardArray = [];
+        $scope.nameFilter = '';
+        $scope.attributeFilter = '';
+        $scope.levelFilter = '';
+        $scope.atkFilter = '';
+        $scope.defFilter = '';
+        $scope.typeFilter = '';
+        $scope.passFilter = '';
+        $scope.openModalDownload = false;
+        $scope.navLink = false;
+
+        $scope.types = [];
+        $scope.attributes = [];
+
+        $scope.selected = {}
+
+        $scope.currentPage = 1;
+        $scope.pageSize = 10;
+
+        // Função para limpar o filtro
+        $scope.clearFilter = function () {
+            $scope.nameFilter = '';
+            $scope.attributeFilter = '';
+            $scope.atkFilter = '';
+            $scope.defFilter = '';
+            $scope.typeFilter = '';
+            $scope.passFilter = '';
+            $scope.filter();
+        };
+
+        // Funções de paginação
+        $scope.numberOfPages = function () {
+            return Math.ceil($scope.filteredCardArray.length / $scope.pageSize);
+        };
+
+        $scope.prevPage = function () {
+            if ($scope.currentPage > 1) {
+                $scope.currentPage--;
+                $scope.updatePagedCardArray();
+            }
+        };
+
+        $scope.nextPage = function () {
+            if ($scope.currentPage < $scope.numberOfPages()) {
+                $scope.currentPage++;
+                $scope.updatePagedCardArray();
+            }
+        };
+
+        $scope.selectItem = function(item){
+            $scope.selected = item;
+        }
+
+        $scope.filter = function () {
+            $scope.currentPage = 1;
+            $scope.filteredCardArray = $scope.cardArray
+                    .filter(function (card) {
+                        return card.card_name.toLowerCase().includes($scope.nameFilter.toLowerCase());
+                    })
+                    .filter(function (card) {
+                        return card.attribute.toLowerCase().includes($scope.attributeFilter.toLowerCase());
+                    })
+                    .filter(function (card) {
+                        return !$scope.levelFilter|| $scope.levelFilter == ''  || card.level == Number($scope.levelFilter);
+                    })
+                    .filter(function (card) {
+                        return !$scope.atkFilter|| $scope.atkFilter == ''  || card.atk == Number($scope.atkFilter);
+                    })
+                    .filter(function (card) {
+                        return !$scope.defFilter|| $scope.defFilter == ''  || card.def == Number($scope.defFilter);
+                    })
+                    .filter(function (card) {
+                        return card.type.toLowerCase().includes($scope.typeFilter.toLowerCase());
+                    })
+            $scope.updatePagedCardArray();
+        };
+
+        // Assim que carregar o cardArray, atualize a lista filtrada
+        $scope.$watch('cardArray', function () {
+            $scope.filteredCardArray = $scope.cardArray.filter(function (card) {
+                return card.card_name.toLowerCase().includes($scope.nameFilter.toLowerCase());
+            });
+            $scope.updatePagedCardArray();
+        });
+
+        // Função para atualizar pagedCardArray com base na página atual e no tamanho da página
+        $scope.updatePagedCardArray = function () {
+            var startIndex = ($scope.currentPage - 1) * $scope.pageSize;
+            var endIndex = startIndex + $scope.pageSize;
+            $scope.pagedCardArray = $scope.filteredCardArray.slice(startIndex, endIndex);
+        };
+
+        $scope.newCard = function(){
+            let nextId = "00000";
+            if ($scope.cardArray.length === 0) {
+                nextId = "00001";
+            } else {
+                var maxId = Math.max(...$scope.cardArray.map(card => parseInt(card.id, 10)));
+                nextId = (maxId + 1).toString().padStart(5, '0');
+            }
+
+            var newCard = {"id":nextId,
+                "card_name":"Nova carta",
+                "attribute":"light",
+                "level":1,"atk":100,"def":100,
+                "type":"dragon","count_as":null,
+                "effect":[],
+                "passcode":"000000000"
+            }
+
+            $scope.cardArray.push(newCard);
+            $scope.selected = newCard;
+            $scope.filter();
+        }
+
+        $scope.newEffect = function(){
+            if(!$scope.selected.effect) $scope.selected.effect = [];
+            $scope.selected.effect.push("");
+        }
+
+        $scope.removeEffect = function(index) {
+            $scope.selected.effect.splice(index, 1);
+        };
+
+        $scope.showNavLiks = function(){
+            $scope.navLink = !$scope.navLink
+        }
+
+        $scope.newType = function(){
+            let name = prompt('Novo tipo')
+            if(name && name.length > 0) {
+                $scope.types.push(name);
+                $scope.selected.type = name;
+            }
+        }
+        $scope.newAttribute = function(){
+            let name = prompt('Novo atributo')
+            if(name && name.length > 0) {
+                $scope.attributes.push(name);
+                $scope.selected.attribute = name;
+            }
+        }
+
+        $scope.openModal = function () {
+            $scope.openModalDownload = true;
+        };
+
+        $scope.closeModal = function () {
+            $scope.openModalDownload = false;
+        };
+
+        const cardListFilePath = '/_scripts/card_list.gd';
+
+        async function fetchCardList() {
+            try {
+                const response = await fetch(cardListFilePath, {cache: 'no-store'});
+                const content = await response.text();
+
+                // Extrai o conteúdo do bloco card_list usando regex
+                const cardListMatch = content.match(/const card_list = ({[\s\S]+})/);
+                const cardPoolMatch = content.match(/var general_card_pool = (\[[^\]]*\])/);
+                
+                if (cardListMatch && cardListMatch[1] && cardPoolMatch && cardPoolMatch[1]) {
+                    const cardListString = cardListMatch[1];
+                    $scope.cardPool = JSON.parse(cardPoolMatch[1]);
+
+                    // Remove as aspas em volta das chaves para tornar a string válida JSON
+                    const jsonString = cardListString.replace(/"{/g, '{').replace(/}"/g, '}');
+
+                    // Converte a string para um objeto JSON
+                    const cardList = JSON.parse(jsonString);
+                    
+                    // Converte o objeto JSON para uma lista
+                    $scope.cardArray = Object.entries(cardList).map(([id, card]) => ({ id, ...card }));
+                    $scope.cardArray.forEach(card => {
+                        card.initial = $scope.cardPool.includes(card.id)
+                    })
+
+                    $scope.selected = $scope.cardArray[0];
+                    console.log('cards', $scope.cardArray )
+
+                    $scope.types = Array.from(new Set($scope.cardArray.map(card => card.type)));
+                    $scope.attributes = Array.from(new Set($scope.cardArray.map(card => card.attribute)));
+
+                    // Atualiza o escopo do AngularJS
+                    $scope.$apply();
+                } else {
+                    console.error('Formato do arquivo GDScript inválido');
+                }
+            } catch (error) {
+                console.error('Erro ao buscar o conteúdo do arquivo:', error);
+            }
+            $('#load').fadeOut('slow')
+        }
+
+        $scope.downloadGDScript = function() {
+            debugger;
+            const gdScriptContent = generateGDScript();
+            const blob = new Blob([gdScriptContent], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'card_list.gd';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            $scope.closeModal();
+        }
+
+        function generateGDScript() {
+            let text = `
+            extends Node
+
+            #Pool of general cards to be used for basic deck building and duel rewards 
+            var general_card_pool = [${$scope.cardArray.filter(x => x.initial).map(objeto => `"${objeto.id}"`)}] 
+            
+            const card_list = { \n`
+            $scope.cardArray.forEach((item, index) => {
+                text += `    "${item.id}" : { 
+                    "card_name": "${item.card_name.replace(/"/g, '\\"')}",
+                    "attribute": "${item.attribute.replace(/"/g, '\\"')}",
+                    "level": ${item.level},
+                    "atk": ${item.atk},
+                    "def": ${item.def},
+                    "type": "${item.type.replace(/"/g, '\\"')}",
+                    "count_as": ${item.count_as != null ? `"${item.count_as}"` : null },
+                    "effect" : ${JSON.stringify(item.effect, null, 0)},   
+                    "passcode": ${item.passcode != null ? `"${item.passcode}"` : null } 
+                }`
+                if (index != $scope.cardArray.length - 1) text += ', \n';
+            })
+
+            text += ` \n }`;
+            return text.replace(/            /g, '');
+        }
+
+        // Chama a função para buscar o conteúdo do arquivo card_list.gd
+        fetchCardList();
+    });
+</script>
+
+</body>
+</html>
