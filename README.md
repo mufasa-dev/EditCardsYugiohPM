@@ -36,6 +36,8 @@ Para executar o servidor local e acessar o editor, siga os passos abaixo:
 
 - O editor permite modificar e visualizar as cartas do jogo de forma intuitiva.
 - Certifique-se de salvar as alterações antes de fechar o editor.
+  ![Card Editor](https://i.ibb.co/NK3LN3d/Captura-de-Tela-2024-01-12-a-s-18-08-44.png)
+  
 
 ## Contribuição
 
